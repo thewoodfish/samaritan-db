@@ -7,10 +7,11 @@ use crate::prelude::*;
 pub fn index(config: &State<DbConfig>) -> Value {
     json!({
         "samaritandb": "Hello Explorer",
-        "version": config.version(),
+        "version": config.version,
         "vendor": {
             "name": "Algorealm, Inc."
-        }
+        },
+        "application_did": config.application_did
     })
 }
 

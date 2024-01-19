@@ -2,3 +2,11 @@
 address = "127.0.0.1"
 port = 1509
 version = "0.1.0"
+application_did = ""
+dblog = "samdb.log"
+
+[debug]
+application_did = "did:sam:apps:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdafe"
+
+[release]
+application_did = "did:sam:apps:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdafe"
