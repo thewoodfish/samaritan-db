@@ -3,34 +3,35 @@
 #[macro_use]
 extern crate rocket;
 
+mod contract;
+mod db;
 mod prelude;
 mod routes;
 mod util;
 
-use figment::{
-    providers::{Env, Format, Serialized, Toml},
-    Figment, Profile,
-};
 use prelude::*;
-use rocket::{fairing::AdHoc, Config};
 
 #[launch]
 fn rocket() -> _ {
-    let figment = Figment::from(rocket::Config::default())
-        .merge(Serialized::defaults(Config::default()))
-        .merge(Toml::file("Sam.toml").nested())
-        .merge(Env::prefixed("SAM_").global())
-        .select(Profile::from_env_or("SAM_PROFILE", "default"));
+    // read config into state
+    let path = util::read_config("data", "path");
+    let log = util::read_config("data", "log");
+    let flush_interval = util::read_config("data", "flush_interval")
+        .parse::<u64>()
+        .unwrap_or(1000);
+    let cache_capacity = util::read_config("data", "path")
+        .parse::<u64>()
+        .unwrap_or(10_000_000_000);
+    let version = util::read_config("data", "version");
 
-    // extract needed config
-    let application_did = figment.extract_inner("application_did").unwrap_or_default();
-    let version = figment.extract_inner("version").unwrap_or_default();
-
-    rocket::custom(figment)
+    rocket::build()
         .mount("/", routes::routes())
-        .attach(DbConfig {
-            application_did,
+        .manage(DbConfig {
+            path,
+            log,
+            flush_interval,
+            cache_capacity,
             version,
         })
-        .attach(AdHoc::config::<DbConfig>())
+        .register("/", catchers![routes::not_found, routes::unauthorized])
 }

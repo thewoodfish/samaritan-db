@@ -1,31 +1,29 @@
-use async_std::sync::Mutex;
-use log::{error, info};
 use rocket::{
-    fairing::{self, Fairing, Info, Kind},
-    serde::Deserialize,
-    Build, Rocket,
+    serde::Deserialize, request::{FromRequest, Outcome}, http::Status,
 };
-use simplelog::{CombinedLogger, Config, LevelFilter, WriteLogger};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use crate::util;
-
-type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
-type GenericResult<T> = Result<T, GenericError>;
-
-lazy_static::lazy_static! {
-    static ref LOGGER_INITIALIZED: Mutex<bool> = Mutex::new(false);
-}
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct DbConfig {
-    pub application_did: String,
+    pub path: String,
+    pub log: String,
+    pub flush_interval: u64,
+    pub cache_capacity: u64,
     pub version: String,
 }
 
+/// path to config file
+pub const CONFIG_FILE_PATH: &str = "config.ini";
+
+type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
+pub type GenericResult<T> = Result<T, GenericError>;
+
 impl DbConfig {
     // static functions
-    pub fn did_is_correct(did: &str) -> bool {
+    pub fn is_valid_did(did: &String) -> bool {
         // Expected format: "did:sam:apps:<48 characters hexadecimal string>"
         let parts: Vec<&str> = did.split(':').collect();
 
@@ -43,63 +41,50 @@ impl DbConfig {
     }
 }
 
-#[rocket::async_trait]
-impl Fairing for DbConfig {
-    fn info(&self) -> Info {
-        Info {
-            name: "Database Config Checker",
-            kind: Kind::Ignite,
-        }
-    }
-
-    async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
-        // setup logger
-        match rocket.figment().extract_inner("dblog") {
-            Ok(file_addr) => {
-                // check that the did is conformant
-                match setup_tracing_logger(&file_addr).await {
-                    Ok(_) => log::info!("Config: database logging setup complete"),
-                    Err(e) => {
-                        println!("{:#?}", e);
-                        return Err(rocket)},
-                }
-            }
-            Err(_) => return Err(rocket),
-        }
-
-        match rocket.figment().extract_inner("application_did") {
-            Ok(app_did) => {
-                // check that the did is conformant
-                if DbConfig::did_is_correct(app_did) {
-                    log::info!("Config: application DID found {}", app_did);
-                } else {
-                    return Err(rocket);
-                }
-            }
-            Err(_) => return Err(rocket),
-        }
-
-        Ok(rocket)
-    }
+/// Authentication payload for assigning an application control of the database
+#[derive(serde::Deserialize)]
+pub struct AuthPayload {
+    pub did: String,
+    pub secret: String,
 }
 
-/// setup async tracing logger
-async fn setup_tracing_logger(log_file: &String) -> GenericResult<()> {
-    // Check if the logger has already been initialized
-    let mut initialized = LOGGER_INITIALIZED.lock().await;
-    if *initialized {
-        return Ok(());
+// Define an authentication guard
+pub struct BasicAuth {
+    pub username: String,
+    pub password: String,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for BasicAuth {
+    type Error = ();
+
+    async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        match request.headers().get_one("Authorization") {
+            Some(header) => {
+                if let Some(credentials) = header.strip_prefix("Basic ") {
+                    if let Ok(decoded) = STANDARD.decode(credentials) {
+                        if let Ok(credentials_str) = String::from_utf8(decoded) {
+                            let mut parts = credentials_str.splitn(2, ':');
+                            let username = parts.next();
+                            let password = parts.next();
+
+                            if let Some(username) = username {
+                                if let Some(password) = password {
+                                    // check for equility
+                                    let ss58_address = util::read_config("auth", "application_did");
+                                    let ss58_address = ss58_address.split(":").nth(3).unwrap_or_default();   // SS58 address
+                                    if username == ss58_address && password == util::read_config("auth", "secret") {
+                                        return Outcome::Success(BasicAuth { username: username.to_owned(), password: password.to_string() });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            None => {}
+        }
+
+        Outcome::Error((Status::Unauthorized, ()))
     }
-    // Open the log file in "create or append" mode
-    let file = util::create_or_append_file(log_file)?;
-    let _ = CombinedLogger::init(vec![WriteLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        file,
-    )])?;
-
-    // Set the initialized flag to true
-    *initialized = true;
-
-    Ok(())
 }
