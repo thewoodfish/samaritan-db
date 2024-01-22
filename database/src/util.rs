@@ -1,5 +1,7 @@
+/// Copyright (c) Algorealm, Inc.
 use crate::prelude::*;
 use ini::Ini;
+use rocket::serde::json::Value;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
@@ -50,4 +52,54 @@ pub fn write_config(section: &str, key: &str, new_value: &str) -> bool {
         }
     }
     false
+}
+
+/// generate document rev
+pub fn generate_rev(n: u64, data: &str) -> String {
+    // Calculate MD5 hash
+    let hash = md5::compute(data);
+
+    // Convert the hash to a hexadecimal string
+    let hash_str = format!("{:x}", hash);
+
+    // Append the hash to the original number
+    let rev = format!("{}-{}", n, hash_str);
+
+    rev
+}
+
+/// merge two json values together
+pub fn merge_json_values(mut base: Value, mut override_value: Value) -> Value {
+    match (base.as_object_mut(), override_value.as_object_mut()) {
+        (Some(base_obj), Some(override_obj)) => {
+            // Iterate over the fields of the override object
+            for (key, value) in override_obj.iter_mut() {
+                // Insert or update the field in the base object
+                base_obj.insert(key.clone(), value.take());
+            }
+        }
+        _ => {
+            // If either of them is not an object, return the override value
+            return override_value;
+        }
+    }
+
+    base
+}
+
+/// remove a field from a Value and return it
+pub fn remove_field(mut value: Value, field_name: &str) -> (Value, Option<Value>) {
+    let mut removed_field = None;
+
+    match value {
+        Value::Object(ref mut map) => {
+            // Check if the field exists
+            if let Some(old_field) = map.remove(field_name) {
+                removed_field = Some(old_field);
+            }
+        }
+        _ => {} // Do nothing if the value is not an object
+    }
+
+    (value, removed_field)
 }

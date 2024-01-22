@@ -14,3 +14,4 @@ serde = { version = "1.0", features = ["derive"] }
 rust-ini = "0.20.0"
 sled = "0.34.7"
 uuid = { version = "1.7.0", features = [ "v4", "fast-rng", "macro-diagnostics" ] }
+md5 = "0.7.0"

@@ -10,6 +10,7 @@ mod routes;
 mod util;
 
 use prelude::*;
+use rocket::{fairing::AdHoc, http::Header};
 
 #[launch]
 fn rocket() -> _ {
@@ -23,8 +24,16 @@ fn rocket() -> _ {
         .parse::<u64>()
         .unwrap_or(10_000_000_000);
     let version = util::read_config("data", "version");
+    let vsn = version.clone();
 
     rocket::build()
+        .attach(AdHoc::on_response("Response Rewriter", move |_, res| {
+            let vsn = vsn.clone();
+            Box::pin(async move {
+                // add to response header
+                res.set_header(Header::new("Server", format!("SamaritanDB v{}", vsn)));
+            })
+        }))
         .mount("/", routes::routes())
         .manage(DbConfig {
             path,

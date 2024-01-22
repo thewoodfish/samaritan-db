@@ -1,3 +1,4 @@
+/// Copyright (c) Algorealm, Inc.
 use rocket::http::Status;
 use rocket::response::status::{self, Custom};
 use rocket::serde::json::{serde_json::json, Json, Value};
@@ -11,11 +12,11 @@ async fn create_user(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
     let credentials = auth_payload.into_inner();
 
     // check the DID for lexical compliance
-    if DbConfig::is_valid_did(&credentials.did) {
+    if DbConfig::is_valid_did(&credentials.did.0, false) {
         return Custom(
             Status::InternalServerError,
             json!({
-                "error" : format!("DID `{}` is not well formed", credentials.did)
+                "error" : format!("DID `{}` is not well formed", credentials.did.0)
             }),
         );
     } else {
@@ -29,7 +30,7 @@ async fn create_user(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
             );
             if secret.is_empty() {
                 // write details to config file
-                if util::write_config("auth", "application_did", &credentials.did)
+                if util::write_config("auth", "application_did", &credentials.did.0)
                     && util::write_config("auth", "secret", &credentials.secret)
                 {
                     return Custom(
@@ -42,7 +43,7 @@ async fn create_user(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
                     return Custom(
                         Status::InternalServerError,
                         json!({
-                            "error" : "could not modify config file"
+                            "error" : "Could not modify config file"
                         }),
                     );
                 }
@@ -50,7 +51,7 @@ async fn create_user(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
                 return Custom(
                     Status::Unauthorized,
                     json!({
-                        "error" : format!("DID `{}` already initialized in database", application_did)
+                        "error" : format!("DID `{}` already initialized in database.", application_did)
                     }),
                 );
             }
@@ -94,9 +95,9 @@ pub fn create_db(db_name: &str, _auth: BasicAuth, config: &State<DbConfig>) -> (
             Err(_) => (
                 Status::InternalServerError,
                 json!({
-                    "error": "could not create database"
+                    "error": "Could not create database."
                 }),
-            )
+            ),
         }
     } else {
         return (
@@ -110,14 +111,14 @@ pub fn create_db(db_name: &str, _auth: BasicAuth, config: &State<DbConfig>) -> (
 
 /// delete a database
 #[delete("/<db_name>")]
-pub fn delete_db(db_name: &str, auth: BasicAuth, config: &State<DbConfig>) -> (Status, Value) {
+pub fn delete_db(db_name: &str, config: &State<DbConfig>) -> (Status, Value) {
     // check if database is in existence
     let config = config.inner();
     if db::database_exists(db_name) {
         // delete the database
-        match db::delete_database(auth, config, &db_name) {
+        match db::delete_database(config, &db_name) {
             Ok(_) => (
-                Status::Created,
+                Status::Ok,
                 json!({
                     "ok": "true"
                 }),
@@ -125,15 +126,115 @@ pub fn delete_db(db_name: &str, auth: BasicAuth, config: &State<DbConfig>) -> (S
             Err(_) => (
                 Status::InternalServerError,
                 json!({
-                    "error": "could not create database"
+                    "error": "Could not create database."
                 }),
-            )
+            ),
         }
     } else {
         return (
             Status::NotFound,
             json!({
-                "error": "The database does not exist"
+                "error": "The database does not exist."
+            }),
+        );
+    }
+}
+
+/// retrieve a list of all databases
+#[get("/_all_dbs")]
+pub fn all_dbs(config: &State<DbConfig>) -> (Status, Value) {
+    match db::all_dbs(config) {
+        Ok(dbs) => (Status::Ok, json!(dbs)),
+        Err(_) => (
+            Status::InternalServerError,
+            json!({
+                "error": "Could not fetch databases."
+            }),
+        ),
+    }
+}
+
+/// generate arbitrary random UUIDs
+#[get("/_uuids?<count>")]
+pub fn uuids(count: Option<u32>) -> Value {
+    let count = count.unwrap_or(1); // Set default count to 1 if not specified
+    let mut uuids: Vec<String> = Vec::with_capacity(37 * count as usize);
+
+    for _ in 0..count {
+        let id = util::generate_uuid().to_string();
+        uuids.push(id);
+    }
+
+    json!(uuids)
+}
+
+/// write data
+#[put("/<db_name>/<doc_id>", format = "json", data = "<data_wrapper>")]
+pub fn update_document(
+    db_name: &str,
+    doc_id: &str,
+    did: Did,
+    config: &State<DbConfig>,
+    data_wrapper: Json<DataWrapper<String>>,
+) -> (Status, Value) {
+    // check if database is in existence
+    let config = config.inner();
+    if db::database_exists(db_name) {
+        // write to it
+        match db::update_document(db_name, doc_id, did, config, &data_wrapper) {
+            Ok(json) => (Status::Ok, json),
+            Err(e) => match e {
+                DatabaseError::DocumentUpdateConflict => (
+                    Status::Conflict,
+                    json!({
+                        "error": "Document update conflict."
+                    }),
+                ),
+                DatabaseError::UserDidConflict => (
+                    Status::Conflict,
+                    json!({
+                        "error": "User DID conflict"
+                    }),
+                ),
+                _ => (
+                    Status::InternalServerError,
+                    json!({
+                        "error": "Could not update database."
+                    }),
+                ),
+            },
+        }
+    } else {
+        return (
+            Status::NotFound,
+            json!({
+                "error": "The database does not exist."
+            }),
+        );
+    }
+}
+
+/// read data
+#[get("/<db_name>/<doc_id>")]
+pub fn fetch_document(db_name: &str, doc_id: &str, config: &State<DbConfig>) -> (Status, Value) {
+    // check if database is in existence
+    let config = config.inner();
+    if db::database_exists(db_name) {
+        // fetch document
+        match db::fetch_document(db_name, doc_id, config) {
+            Ok(json) => (Status::Ok, json),
+            Err(_) => (
+                Status::InternalServerError,
+                json!({
+                    "error": "Could not update database."
+                }),
+            ),
+        }
+    } else {
+        return (
+            Status::NotFound,
+            json!({
+                "error": "The database does not exist."
             }),
         );
     }
@@ -154,5 +255,14 @@ pub fn unauthorized(_req: &Request) -> Value {
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    routes![index, create_user, create_db]
+    routes![
+        index,
+        create_user,
+        create_db,
+        delete_db,
+        all_dbs,
+        uuids,
+        update_document,
+        fetch_document
+    ]
 }
