@@ -30,4 +30,21 @@ For the achievement of goal one, two crates were simply used:
 1. In the root folder, find the `config.ini` file. This file contains many information that enables the database to be constomized and run properly. Edit it only if you know what you're doing.
 1. Clear the `.data` directory in the root folder. This directory is the default path for disk data storage.
 1. (Optionally) edit the `Rocket.toml` file. This file contains configurations for the http networking aspect of the database e.g the tcp port address.
+1. Initialize the application that controls the database and owns the data. This is done with the `init_application` route. You'll see how to do that below.
+1. Compile and run
+1. Start making requests
+
+### Http routes available
+    Please not that since this is a RESTful database, most of the request use methods that cant be easily fired on the browser. The `curl` utility on your terminal is the most appropriate to use. The list of routes are as follows:
+
+- **index**:
+    - `method`: `GET`
+    - `route`: `/`
+    - `function`: It says hi to the database. Generally used to ensure database is running on specified address.
+    - `return (example)`: 
+        ```
+            {"application_did":"","samaritandb":"Hello Explorer","vendor":{"name":"Algorealm, Inc."},"version":"0.1"}
+        ```
+
+
 
