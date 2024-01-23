@@ -126,7 +126,7 @@ pub fn delete_db(db_name: &str, config: &State<DbConfig>, _auth: BasicAuth) -> (
             Err(_) => (
                 Status::InternalServerError,
                 json!({
-                    "error": "Could not create database."
+                    "error": "Could not delete database."
                 }),
             ),
         }
