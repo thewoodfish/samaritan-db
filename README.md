@@ -156,7 +156,7 @@ Please note that since this is a RESTful database, most of the request use metho
 
 - **uuids**:
   - `method`: `GET`
-  - `route`: `//_uuids?<count>`
+  - `route`: `/_uuids?<count>`
   - `auth`: None
   - `function`: This routes returns a list of all UUIDs (adviced) to be used as document IDs.
   - `request (example)`:
