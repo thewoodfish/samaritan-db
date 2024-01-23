@@ -41,7 +41,11 @@ Please not that since this is a RESTful database, most of the request use method
     - `method`: `GET`
     - `route`: `/`
     - `function`: It says hi to the database. Generally used to ensure database is running on specified address.
-    - `return (example)`: 
+    - `request (example)`: 
+        ```
+            curl http://127.0.0.1:1509/
+        ```
+    - `response (example)`: 
         ```
             {"application_did":"","samaritandb":"Hello Explorer","vendor":{"name":"Algorealm, Inc."},"version":"0.1"}
         ```
