@@ -8,7 +8,7 @@ use rocket::State;
 use crate::{contract, db, prelude::*, util};
 
 #[post("/_auth", data = "<auth_payload>")]
-async fn create_user(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
+async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
     let credentials = auth_payload.into_inner();
 
     // check the DID for lexical compliance
@@ -292,7 +292,7 @@ pub fn bad_request(_req: &Request) -> Value {
 pub fn routes() -> Vec<rocket::Route> {
     routes![
         index,
-        create_user,
+        init_application,
         create_db,
         delete_db,
         all_dbs,
