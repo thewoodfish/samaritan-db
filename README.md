@@ -35,7 +35,7 @@ For the achievement of goal one, two crates were simply used:
 1. Start making requests
 
 ### Http routes available
-    Please not that since this is a RESTful database, most of the request use methods that cant be easily fired on the browser. The `curl` utility on your terminal is the most appropriate to use. The list of routes are as follows:
+Please not that since this is a RESTful database, most of the request use methods that cant be easily fired on the browser. The `curl` utility on your terminal is the most appropriate to use.
 
 - **index**:
     - `method`: `GET`
