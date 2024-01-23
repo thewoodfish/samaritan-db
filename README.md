@@ -2,7 +2,7 @@
 Empowering data self-sovereignty
 
 ## Definition
-Samaritandb is a decentralized database that aims to give users of control and soverignty over their data stored across applications on the internet.
+Samaritandb is a decentralized database that aims to give digital users control and soverignty over their data stored across applications on the internet.
 
 ## Goals for this prototype
 - Build a simple document database that allows: ✅
