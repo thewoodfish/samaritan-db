@@ -3,8 +3,8 @@ use std::fs;
 
 use crate::{prelude::*, util};
 use rocket::serde::json::{
-    serde_json::{self, from_str, json},
-    Json, Value,
+    serde_json::{from_str, json},
+    Value,
 };
 
 /// check if a database exists
@@ -93,10 +93,10 @@ pub fn update_document(
     doc_id: &str,
     did: Did,
     config: &DbConfig,
-    data_wrapper: &Json<DataWrapper<String>>,
+    data_wrapper: DataWrapper<Value>,
 ) -> Result<Value, DatabaseError> {
     // first parse the data wrapper
-    let mut db_entry: Value = serde_json::from_str(&data_wrapper.data)?;
+    let mut db_entry: Value = data_wrapper.data;
 
     let cfg = sled::Config::default()
         .path(format!("{}{}", config.path, db_name))
@@ -109,14 +109,17 @@ pub fn update_document(
     let meta_id = format!("{}_meta", doc_id);
 
     // _rev signifies an update
-    if let Some(rev) = &data_wrapper._rev {
+    let rev = db_entry["_rev"].clone();
+    if rev != Value::Null {
+        let rev = rev.to_string();
+
         // get the document entry and its metadata
         let doc = db
             .get(doc_id.as_bytes())?
             .ok_or(DatabaseError::OtherError)?;
 
         let doc_meta = db
-            .get(doc_id.as_bytes())?
+            .get(meta_id.as_bytes())?
             .ok_or(DatabaseError::OtherError)?;
 
         let doc = from_str::<Value>(
@@ -131,15 +134,15 @@ pub fn update_document(
         )?;
 
         // extract _rev_id and compare
-        if *rev == doc["_rev"].to_string() {
+        if rev == doc["_rev"].to_string() {
             // check for did correlation
-            if did.0 == doc_meta["_did"].to_string() {
+            if Value::String(did.0) == doc_meta["_did"] {
                 // update data
                 let new_entry = util::merge_json_values(doc, db_entry);
                 let (mut new_entry, current_rev) = util::remove_field(new_entry, "_rev");
                 if let Some(_rev) = current_rev {
                     // get new rev
-                    let _rev = _rev.to_string();
+                    let _rev = _rev.as_str().unwrap_or_default();
                     let parsed_rev = _rev
                         .split("-")
                         .next()
@@ -149,6 +152,7 @@ pub fn update_document(
                         .parse::<u64>()
                         .ok()
                         .ok_or(DatabaseError::OtherError)?;
+
                     let new_rev = util::generate_rev(parsed_rev + 1, &new_entry.to_string());
 
                     // set rev
@@ -184,36 +188,41 @@ pub fn update_document(
             return Err(DatabaseError::DocumentUpdateConflict);
         }
     } else {
-        // create new document entry in the database
-        // update id
-        db_entry["id"] = doc_id.to_owned().into();
-        // update rev
-        let rev = util::generate_rev(1, &db_entry.to_string());
-        db_entry["_rev"] = rev.clone().into();
+        // first check that truly, the document doesn't exist
+        if let None = db.get(doc_id.as_bytes())? {
+            // create new document entry in the database
+            // update id
+            db_entry["id"] = doc_id.to_owned().into();
+            // update rev
+            let rev = util::generate_rev(1, &db_entry.to_string());
+            db_entry["_rev"] = rev.clone().into();
 
-        // save entry
-        db.insert(doc_id.as_bytes(), db_entry.to_string().as_bytes())?;
+            // save entry
+            db.insert(doc_id.as_bytes(), db_entry.to_string().as_bytes())?;
 
-        // save the document metadata too
-        let metadata = json!({
-            // accessible by default, except changed in contract
-            "_accessible": true,
-            "_did": did.0,
-            "_rev": rev.clone(),
-            "created_at": util::get_unix_epoch_time(),
-            "updated_at": util::get_unix_epoch_time(),
-        })
-        .to_string();
+            // save the document metadata too
+            let metadata = json!({
+                // accessible by default, except changed in contract
+                "_accessible": true,
+                "_did": did.0,
+                "_rev": rev.clone(),
+                "created_at": util::get_unix_epoch_time(),
+                "updated_at": util::get_unix_epoch_time(),
+            })
+            .to_string();
 
-        // save in same database
-        db.insert(meta_id.as_bytes(), metadata.to_string().as_bytes())?;
+            // save in same database
+            db.insert(meta_id.as_bytes(), metadata.to_string().as_bytes())?;
 
-        // return response
-        return Ok(json!({
-            "ok": true,
-            "id": did.0,
-            "rev": rev
-        }));
+            // return response
+            return Ok(json!({
+                "ok": true,
+                "id": doc_id,
+                "rev": rev
+            }));
+        } else {
+            return Err(DatabaseError::DocumentUpdateConflict);
+        }
     }
 }
 
@@ -236,4 +245,24 @@ pub fn fetch_document(db_name: &str, doc_id: &str, config: &DbConfig) -> Databas
         .ok_or(DatabaseError::OtherError)?;
 
     Ok(json!(from_str::<Value>(&doc_string)?))
+}
+
+/// delete document
+pub fn delete_document(db_name: &str, doc_id: &str, config: &DbConfig) -> DatabaseResult<()> {
+    // open database
+    let cfg = sled::Config::default()
+        .path(format!("{}{}", config.path, db_name))
+        .cache_capacity(config.cache_capacity)
+        .flush_every_ms(Some(config.flush_interval));
+
+    let db = cfg.open()?;
+
+    db.remove(doc_id.as_bytes())?
+        .ok_or(DatabaseError::OtherError)?;
+
+    // delete metadata
+    db.remove(format!("{}_meta", doc_id).as_bytes())?
+        .ok_or(DatabaseError::OtherError)?;
+
+    Ok(())
 }

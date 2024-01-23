@@ -42,5 +42,5 @@ fn rocket() -> _ {
             cache_capacity,
             version,
         })
-        .register("/", catchers![routes::not_found, routes::unauthorized])
+        .register("/", catchers![routes::not_found, routes::unauthorized, routes::bad_request])
 }

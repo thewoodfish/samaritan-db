@@ -111,7 +111,7 @@ pub fn create_db(db_name: &str, _auth: BasicAuth, config: &State<DbConfig>) -> (
 
 /// delete a database
 #[delete("/<db_name>")]
-pub fn delete_db(db_name: &str, config: &State<DbConfig>) -> (Status, Value) {
+pub fn delete_db(db_name: &str, config: &State<DbConfig>, _auth: BasicAuth) -> (Status, Value) {
     // check if database is in existence
     let config = config.inner();
     if db::database_exists(db_name) {
@@ -169,19 +169,21 @@ pub fn uuids(count: Option<u32>) -> Value {
 }
 
 /// write data
-#[put("/<db_name>/<doc_id>", format = "json", data = "<data_wrapper>")]
+#[put("/<db_name>/<doc_id>", data = "<data_wrapper>")]
 pub fn update_document(
     db_name: &str,
     doc_id: &str,
     did: Did,
     config: &State<DbConfig>,
-    data_wrapper: Json<DataWrapper<String>>,
+    _auth: BasicAuth,
+    data_wrapper: Json<DataWrapper<Value>>,
 ) -> (Status, Value) {
     // check if database is in existence
     let config = config.inner();
+    let data = data_wrapper.into_inner();
     if db::database_exists(db_name) {
         // write to it
-        match db::update_document(db_name, doc_id, did, config, &data_wrapper) {
+        match db::update_document(db_name, doc_id, did, config, data) {
             Ok(json) => (Status::Ok, json),
             Err(e) => match e {
                 DatabaseError::DocumentUpdateConflict => (
@@ -226,7 +228,33 @@ pub fn fetch_document(db_name: &str, doc_id: &str, config: &State<DbConfig>) -> 
             Err(_) => (
                 Status::InternalServerError,
                 json!({
-                    "error": "Could not update database."
+                    "error": "Could not read from database."
+                }),
+            ),
+        }
+    } else {
+        return (
+            Status::NotFound,
+            json!({
+                "error": "The database does not exist."
+            }),
+        );
+    }
+}
+
+/// get document metadata
+#[delete("/<db_name>/<doc_id>")]
+pub fn delete_document(db_name: &str, doc_id: &str, config: &State<DbConfig>) -> (Status, Value) {
+    // check if database is in existence
+    let config = config.inner();
+    if db::database_exists(db_name) {
+        // fetch document
+        match db::delete_document(db_name, doc_id, config) {
+            Ok(_) => (Status::Ok, json!({ "ok": true})),
+            Err(_) => (
+                Status::InternalServerError,
+                json!({
+                    "error": "Could not delete document"
                 }),
             ),
         }
@@ -254,6 +282,13 @@ pub fn unauthorized(_req: &Request) -> Value {
     })
 }
 
+#[catch(400)]
+pub fn bad_request(_req: &Request) -> Value {
+    json!({
+        "error": "Invalid or missing important header"
+    })
+}
+
 pub fn routes() -> Vec<rocket::Route> {
     routes![
         index,
@@ -263,6 +298,7 @@ pub fn routes() -> Vec<rocket::Route> {
         all_dbs,
         uuids,
         update_document,
-        fetch_document
+        fetch_document,
+        delete_document
     ]
 }

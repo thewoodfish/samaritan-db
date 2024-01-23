@@ -181,6 +181,4 @@ fn extract_did_from_request(request: &Request<'_>) -> String {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DataWrapper<T> {
     pub data: T,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub _rev: Option<String>,
 }
