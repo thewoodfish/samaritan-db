@@ -35,7 +35,7 @@ For the achievement of goal one, two crates were simply used:
 1. Start making requests
 
 ### Http routes available
-Please not that since this is a RESTful database, most of the request use methods that cant be easily fired on the browser. The `curl` utility on your terminal is the most appropriate to use.
+Please note that since this is a RESTful database, most of the request use methods that cant be easily fired on the browser. The `curl` utility on your terminal is the most appropriate to use.
 
 - **index**:
     - `method`: `GET`
@@ -119,5 +119,24 @@ Please not that since this is a RESTful database, most of the request use method
 
             404 Not Found:
                 - The database does not exist on machine
+        ```
+
+- **all databases**:
+    - `method`: `GET`
+    - `route`: `/_all_dbs`
+    - `auth`: Basic
+    - `function`: This routes returns a list of all the databases.
+    - `request (example)`: 
+        ```
+            curl -X GET http://<username>:<password>@127.0.0.1:1509/_all_dbs
+        ```
+    - `response (example)`: 
+        ```
+            200 Ok ["napoleon_history","people","plankton","relay"]
+        ```
+    - `response (error)`:
+        ```
+            500 InternalServerError:
+                - failed to return list
         ```
 
