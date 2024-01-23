@@ -48,7 +48,7 @@ Please not that since this is a RESTful database, most of the request use method
         ```
     - `response (example)`: 
         ```
-            200 OK {"application_did":"","samaritandb":"Hello Explorer","vendor":{"name":"Algorealm, Inc."},"version":"0.1"}
+            200 Ok {"application_did":"","samaritandb":"Hello Explorer","vendor":{"name":"Algorealm, Inc."},"version":"0.1"}
         ```
 
 - **initialize application**:
@@ -65,10 +65,15 @@ Please not that since this is a RESTful database, most of the request use method
         ```
     - `response (example)`: 
         ```
-            200 OK {"ok":true}
+            200 Ok {"ok":true}
         ```
     - `response (error)`:
         ```
+            500 InternalServerError; Occurs when
+                - DID parse error occurs
+                - Failed to write to config file
 
+            401 Unauthorizzed; Occurs when 
+                - An application has already been intialized into the database
         ```
 
