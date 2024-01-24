@@ -73,7 +73,7 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
   - `response (example)`:
     ```
-        200 Ok {"ok":true}
+        200 Ok { "ok":true, "secret": "cf63b8b1897d02" }
     ```
   - `response (error)`:
 

@@ -106,7 +106,7 @@ pub fn remove_field(mut value: Value, field_name: &str) -> (Value, Option<Value>
 }
 
 pub fn generate_strong_password(length: usize) -> String {
-    let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+    let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let mut rng = rand::thread_rng();
     let strong_password: String = (0..length)
         .map(|_| {
