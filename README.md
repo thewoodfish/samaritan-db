@@ -20,6 +20,7 @@ Samaritandb is a decentralized DBMS that aims to give digital users control and 
   - replication
   - use of decentralized protocols
 - High CAP factor ❌
+- Permissioned data Sharing between applications ❌
 
 ## Goal 1
 
