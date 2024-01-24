@@ -209,7 +209,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `revisions`:
     Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
 
-- **read database**
+- **read document**
 
   - `method`: `GET`
   - `route`: `/<database_name>/<document_id>`
@@ -220,7 +220,7 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
     curl -X GET http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
     ```
-    
+
   - `response (example)`:
     ```
         200 Ok { "id":"0378f893-e48d-4b69-b821-7a3c2ea7b4b2", "complexion":"fair", "name":"Victoria Adekunle","role_model":"Martin Luther King",  "_rev":"1-5ac8ff0a3c7aa4d4c3a39c316560fa7e" }
@@ -233,5 +233,31 @@ Please note that since this is a RESTful database, most of the request use metho
 
         404 Not Found:
             - the document does not exist
+            - the database does not exist
+    ```
+
+- **delete document**
+
+  - `method`: `DELETE`
+  - `route`: `/<database_name>/<document_id>`
+  - `auth`: Basic
+  - `function`: This routes deletes a document in the database.
+  - `request (example)`:
+
+    ```
+    curl -X DELETE http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
+    ```
+
+  - `response (example)`:
+    ```
+        200 Ok { "ok": true }
+    ```
+  - `response (error)`:
+
+    ```
+        500 InternalServerError:
+            - delete operation failed
+
+        404 Not Found:
             - the database does not exist
     ```
