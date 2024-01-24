@@ -225,12 +225,20 @@ pub fn fetch_document(db_name: &str, doc_id: &str, config: &State<DbConfig>) -> 
         // fetch document
         match db::fetch_document(db_name, doc_id, config) {
             Ok(json) => (Status::Ok, json),
-            Err(_) => (
-                Status::InternalServerError,
-                json!({
-                    "error": "Could not read from database."
-                }),
-            ),
+            Err(e) => match e {
+                DatabaseError::MissingDocument => (
+                    Status::NotFound,
+                    json!({
+                        "error": "The document does not exist"
+                    }),
+                ),
+                _ => (
+                    Status::InternalServerError,
+                    json!({
+                        "error": "Could not read from database."
+                    }),
+                ),
+            },
         }
     } else {
         return (

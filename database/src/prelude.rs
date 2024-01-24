@@ -28,6 +28,7 @@ pub enum DatabaseError {
     DocumentUpdateConflict,
     DocumentRevisionNotFound,
     UserDidConflict,
+    MissingDocument,
     OtherError,
 }
 

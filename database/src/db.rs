@@ -238,7 +238,7 @@ pub fn fetch_document(db_name: &str, doc_id: &str, config: &DbConfig) -> Databas
 
     let document = db
         .get(doc_id.as_bytes())?
-        .ok_or(DatabaseError::OtherError)?;
+        .ok_or(DatabaseError::MissingDocument)?;
 
     let doc_string = String::from_utf8(document.to_vec())
         .ok()

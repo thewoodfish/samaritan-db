@@ -176,7 +176,6 @@ Please note that since this is a RESTful database, most of the request use metho
   - `auth`: Basic
   - `function`: This routes helps to update a document in the database.
   - `request (example)`:
-  
 
     ```
        curl -X PUT http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1 \
@@ -200,11 +199,39 @@ Please note that since this is a RESTful database, most of the request use metho
 
         404 Not Found:
             - the database does not exist on machine
-        
+
         400 BadRequest,
             - invalid or missing X-DID header
     ```
+
   - `header`:
-        The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a DID.
+    The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a valid DID.
   - `revisions`:
-        Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
+    Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
+
+- **read database**
+
+  - `method`: `GET`
+  - `route`: `/<database_name>/<document_id>`
+  - `auth`: Basic
+  - `function`: This routes fetches a document in the database.
+  - `request (example)`:
+
+    ```
+    curl -X GET http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
+    ```
+    
+  - `response (example)`:
+    ```
+        200 Ok { "id":"0378f893-e48d-4b69-b821-7a3c2ea7b4b2", "complexion":"fair", "name":"Victoria Adekunle","role_model":"Martin Luther King",  "_rev":"1-5ac8ff0a3c7aa4d4c3a39c316560fa7e" }
+    ```
+  - `response (error)`:
+
+    ```
+        500 InternalServerError:
+            - read operation failed
+
+        404 Not Found:
+            - the document does not exist
+            - the database does not exist
+    ```
