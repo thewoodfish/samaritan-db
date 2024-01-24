@@ -155,6 +155,7 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
 
 - **uuids**:
+
   - `method`: `GET`
   - `route`: `/_uuids?<count>`
   - `auth`: None
@@ -167,3 +168,43 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
         200 Ok ["39727b01-77e1-4825-bbce-1bfecc824b2e","3d4a443f-a6e0-4f84-9268-90e9fc51d175","6b7558a9-4b62-49c6-ba94-a060645e7024"]
     ```
+
+- **update database**
+
+  - `method`: `PUT`
+  - `route`: `/<database_name>/<document_id>`
+  - `auth`: Basic
+  - `function`: This routes helps to update a document in the database.
+  - `request (example)`:
+  
+
+    ```
+       curl -X PUT http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1 \
+        -H "Content-Type: application/json" -H "X-DID: did:sam:root:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf2"
+        -d '{"data": { "name":"Victoria Temilade Adekunle", "role_model":"Martin Luther King", "complexion":"fair", "_rev": "1-d3621aab8cbcec74b10202ac75ca98cb"}}'
+    ```
+
+  - `response (example)`:
+    ```
+        200 Ok {"id": "0378f893-e48d-4b69-b821-7a3c2ea7b4b1", "ok":true, "rev": "2-e4a21aab8cb8fa74b10202ac75ca98cb"}
+    ```
+  - `response (error)`:
+
+    ```
+        500 InternalServerError:
+            - write operation failed
+
+        409 Conflict:
+            - the rev field failed to match
+            - the DID specified in the header does not match the one in memory
+
+        404 Not Found:
+            - the database does not exist on machine
+        
+        400 BadRequest,
+            - invalid or missing X-DID header
+    ```
+  - `header`:
+        - X-DID: The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a DID.
+  - `revisions`:
+        Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
