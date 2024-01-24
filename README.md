@@ -205,6 +205,6 @@ Please note that since this is a RESTful database, most of the request use metho
             - invalid or missing X-DID header
     ```
   - `header`:
-        - X-DID: The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a DID.
+        The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a DID.
   - `revisions`:
         Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
