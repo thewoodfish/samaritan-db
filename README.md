@@ -261,3 +261,6 @@ Please note that since this is a RESTful database, most of the request use metho
         404 Not Found:
             - the database does not exist
     ```
+
+### Basic Auth
+The basic authentication authenticates the username and password and permits the request to be processed if it passes. The username is gotten from the applications DID. It is the suffix SS58 address to the application DID. The password is
