@@ -266,6 +266,4 @@ Please note that since this is a RESTful database, most of the request use metho
 The basic authentication authenticates the username and password and permits the request to be processed if it passes. The username is gotten from the applications DID. It is the suffix SS58 address to the application DID. The password is the value of the `secret` key returned on the `/_auth` route during application initialization. 
 
 #### Example
-    ```
         curl -X DELETE http://3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf:A79rXprc0L@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
-    ```
