@@ -245,7 +245,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `request (example)`:
 
     ```
-    curl -X DELETE http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
+        curl -X DELETE http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
     ```
 
   - `response (example)`:
@@ -267,5 +267,5 @@ The basic authentication authenticates the username and password and permits the
 
 #### Example
     ```
-    curl -X DELETE http://3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf:A79rXprc0L@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
+        curl -X DELETE http://3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf:A79rXprc0L@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1
     ```
