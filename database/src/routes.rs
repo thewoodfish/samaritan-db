@@ -29,14 +29,18 @@ async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Val
                 util::read_config("auth", "application_did"),
             );
             if secret.is_empty() {
+                // generate new password
+                let secret_password = util::generate_strong_password(10);
+
                 // write details to config file
                 if util::write_config("auth", "application_did", &credentials.did.0)
-                    && util::write_config("auth", "secret", &credentials.secret)
+                    && util::write_config("auth", "secret", &secret_password)
                 {
                     return Custom(
                         Status::Ok,
                         json!({
-                            "ok" : true
+                            "ok" : true,
+                            "secret": secret_password
                         }),
                     );
                 } else {

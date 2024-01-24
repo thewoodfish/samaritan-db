@@ -1,6 +1,7 @@
 /// Copyright (c) Algorealm, Inc.
 use crate::prelude::*;
 use ini::Ini;
+use rand::Rng;
 use rocket::serde::json::Value;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -102,4 +103,18 @@ pub fn remove_field(mut value: Value, field_name: &str) -> (Value, Option<Value>
     }
 
     (value, removed_field)
+}
+
+pub fn generate_strong_password(length: usize) -> String {
+    let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+    let mut rng = rand::thread_rng();
+    let strong_password: String = (0..length)
+        .map(|_| {
+            characters
+                .chars()
+                .nth(rng.gen_range(0..characters.len()))
+                .unwrap()
+        })
+        .collect();
+    strong_password
 }
