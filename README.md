@@ -26,7 +26,7 @@ Samaritandb is a decentralized DBMS that aims to give digital users control and 
 
 For the achievement of goal one, two crates were simply used:
 
-- Rocket: Rocket is used to handle the http networking aspect of the database. The database was inspired by couchDB and is build to be almost completely RESTful. Rocket helps us substancially in achieving this goal.
+- Rocket: Rocket is used to handle the http networking aspect of the database. The database was inspired by couchDB and is built to be almost completely RESTful. Rocket helps us substantially in achieving this goal.
 - Sled: Sled is used as the underlying data-store which handles all data storage and retrieval operations. It is a high performant embedded database that uses a B+ Tree engine.
 
 ### Steps in running the database
