@@ -34,7 +34,7 @@ For the achievement of goal one, two crates were simply used:
 1. Generate an `application DID` onchain here.
 1. Clone this repo
 1. In the root folder, find the `config.ini` file. This file contains many information that enables the database to be constomized and run properly. Edit it only if you know what you're doing.
-1. Clear the `.data` directory in the root folder, except the `.dbs` folder. This directory is the default path for disk data storage.
+1. Clear the `.data` directory in the root folder, then create a `.dbs` folder in the `data` directory. This directory is the default path for disk data storage.
 1. (Optionally) edit the `Rocket.toml` file. This file contains configurations for the http networking aspect of the database e.g the tcp port address.
 1. Initialize the application that controls the database and owns the data. This is done with the `_auth` route. You'll see how to do that below.
 1. Compile and run
