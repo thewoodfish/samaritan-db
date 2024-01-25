@@ -11,15 +11,15 @@ Samaritandb is a decentralized DBMS that aims to give digital users control and 
 - Build a simple document database that allows: ✅
   - creation/removal of databases
   - creation/update/removal of documents
+- High CAP factor ❌
+  - Distributed networking
+  - sharding
+  - replication
+  - use of decentralized protocols
 - Data local is owned by a DID at all times ❌
 - Sensitivity to onchain data access changes ❌
 - User data collation and viewing ❌
 - No censorship ❌
-- Distributed networking: ❌
-  - sharding
-  - replication
-  - use of decentralized protocols
-- High CAP factor ❌
 - Permissioned data sharing between applications ❌
 
 ## Goal 1
