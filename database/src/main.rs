@@ -26,6 +26,17 @@ fn rocket() -> _ {
     let version = util::read_config("data", "version");
     let vsn = version.clone();
 
+    // TODO!
+    // The default values should not be "empty" but should be set to meaningful defaults
+
+    // TODO!
+    // Spin off a task to check the chain if the DID exists and then add it to the list
+    // of DIDs we know exist onchain.
+    // Ofcourse, we'll first check this list before querying the chain.
+    // If the DID is imaginary, delete the data
+    let did_queue = Mutex::new(DidQueue::new());
+
+
     rocket::build()
         .attach(AdHoc::on_response("Response Rewriter", move |_, res| {
             let vsn = vsn.clone();
@@ -42,5 +53,8 @@ fn rocket() -> _ {
             cache_capacity,
             version,
         })
-        .register("/", catchers![routes::not_found, routes::unauthorized, routes::bad_request])
+        .register(
+            "/",
+            catchers![routes::not_found, routes::unauthorized, routes::bad_request],
+        )
 }

@@ -61,7 +61,7 @@ pub struct DbConfig {
 }
 
 /// path to config file
-pub const CONFIG_FILE_PATH: &str = "config.ini";
+pub static CONFIG_FILE_PATH: &str = "config.ini";
 
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
 
@@ -119,7 +119,7 @@ impl<'r> FromRequest<'r> for BasicAuth {
                                     let ss58_address =
                                         ss58_address.split(":").nth(3).unwrap_or_default(); // SS58 address
                                     if username == ss58_address
-                                        && password == util::read_config("auth", "secret")
+                                        && password == util::read_config("auth", "auth_secret")
                                     {
                                         return Outcome::Success(BasicAuth {
                                             username: username.to_owned(),
@@ -183,3 +183,6 @@ fn extract_did_from_request(request: &Request<'_>) -> String {
 pub struct DataWrapper<T> {
     pub data: T,
 }
+
+/// A type that hold DIDs of data that have just been inserted into the database
+pub type DidQueue = Vec<String>;

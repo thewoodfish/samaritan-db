@@ -12,6 +12,7 @@ pub fn database_exists(db_name: &str) -> bool {
     let data_path = util::read_config("data", "path");
     let db_path = format!("{}{}", data_path, db_name);
 
+    // since databases are capsulated in directories
     util::is_directory_within_parent(&db_path, &data_path)
 }
 
@@ -60,6 +61,7 @@ pub fn delete_database(config: &DbConfig, name: &str) -> Result<(), DatabaseErro
             let data_path = util::read_config("data", "path");
             let db_path = format!("{}{}", data_path, name);
 
+            // since databases are capsulated in directories
             fs::remove_dir_all(db_path)?;
         }
         None => {

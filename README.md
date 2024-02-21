@@ -81,10 +81,13 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
         500 InternalServerError:
             - DID parse error occurs
-            - failed to write to config file
+            - Failed to write to config file
+          
+        404 Not Found:
+            - The credentialis provided matched on onchain account
 
         401 Unauthorized:
-            - an application has already been intialized into the database
+            - An application has already been intialized into the database
     ```
 
 - **create database**:
@@ -105,7 +108,7 @@ Please note that since this is a RESTful database, most of the request use metho
 
     ```
         500 InternalServerError:
-            - failed to create database
+            - Failed to create database
 
         409 Conflict:
             - The database already exists
@@ -116,7 +119,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `method`: `DELETE`
   - `route`: `/<database_name>`
   - `auth`: Basic
-  - `function`: This routes creates a database on success.
+  - `function`: This routes deleted a database on success.
   - `request (example)`:
     ```
         curl -X DELETE http://<username>:<password>@127.0.0.1:1509/first_database
@@ -129,7 +132,7 @@ Please note that since this is a RESTful database, most of the request use metho
 
     ```
         500 InternalServerError:
-            - failed to delete database
+            - Failed to delete database
 
         404 Not Found:
             - The database does not exist on machine
@@ -152,7 +155,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `response (error)`:
     ```
         500 InternalServerError:
-            - failed to return list
+            - Failed to return list
     ```
 
 - **uuids**:
@@ -206,7 +209,8 @@ Please note that since this is a RESTful database, most of the request use metho
     ```
 
   - `header`:
-    The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a valid DID.
+    The X-DID header is used to associate a user DID with the piece of data being stored. If it is absent or incorrect, a 400 error is returned and the data cannot be saved to the database. It is crucial that every piece of data is associated with a valid DID and the DID will also be examined for its existence onchain. If the DID does not exist onchain, the data stored will soon be removed from the database if the previous write was successful.
+
   - `revisions`:
     Revisions are useful to prevent conflict in data update. With the right `_rev` field, the database is sure that you're pointing to the latest document and are up to date. This goes a long way in conflict resolution. The `_rev` field is not included in the first write request, only subsequently when the database has returned a rev ID on write. This rev ID must then be included in the next request.
 

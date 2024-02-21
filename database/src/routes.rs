@@ -24,17 +24,22 @@ async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Val
         if contract::authenticate(&credentials) {
             // set the auth details, only if it hasn't been set
             // read config file
-            let (secret, application_did) = (
+            let (hash_secret, application_did) = (
                 util::read_config("auth", "secret"),
                 util::read_config("auth", "application_did"),
             );
-            if secret.is_empty() {
+
+            if hash_secret.is_empty() {
+                // TODO!
+                // spawn task to manage data operations
+
                 // generate new password
                 let secret_password = util::generate_strong_password(10);
 
                 // write details to config file
                 if util::write_config("auth", "application_did", &credentials.did.0)
-                    && util::write_config("auth", "secret", &secret_password)
+                    && util::write_config("auth", "auth_secret", &secret_password)
+                    && util::write_config("auth", "secret", util::hash_string(&credentials.secret).as_ref())
                 {
                     return Custom(
                         Status::Ok,
@@ -52,6 +57,23 @@ async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Val
                     );
                 }
             } else {
+                // generate new password
+                let secret_password = util::generate_strong_password(10);
+
+                // check whether account has been initialized before and we can continue session
+                if util::hash_string(&credentials.secret) == hash_secret {
+                    // TODO!
+                    // spawn task to manage data operations
+
+                    return Custom(
+                        Status::Ok,
+                        json!({
+                            "ok" : true,
+                            "secret": secret_password
+                        }),
+                    );
+                }
+
                 return Custom(
                     Status::Unauthorized,
                     json!({

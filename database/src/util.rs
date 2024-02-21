@@ -3,6 +3,7 @@ use crate::prelude::*;
 use ini::Ini;
 use rand::Rng;
 use rocket::serde::json::Value;
+use std::borrow::Cow;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
@@ -67,6 +68,15 @@ pub fn generate_rev(n: u64, data: &str) -> String {
     let rev = format!("{}-{}", n, hash_str);
 
     rev
+}
+
+/// produce a simple hash
+pub fn hash_string(data: &str) -> Cow<'static, str> {
+    // Calculate MD5 hash
+    let hash = md5::compute(data);
+
+    // Convert the hash to a hexadecimal string
+    format!("{:x}", hash).into()
 }
 
 /// merge two json values together
