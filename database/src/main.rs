@@ -61,7 +61,6 @@ async fn main() -> Result<(), rocket::Error> {
                     // check the chain if the DID is recognized
                     if !contract::did_exists(&db_entry.did) {
                         // remove data in association to "fake" DID
-                        // pub fn delete_document(db_name: &str, doc_id: &str, config: &DbConfig) -> DatabaseResult<()> {
                         let _ = db::delete_document(&db_entry.db_name, &db_entry.doc_id, &cfg);
                     } else {
                         // write to config file
