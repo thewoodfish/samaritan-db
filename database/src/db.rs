@@ -1,11 +1,14 @@
 /// Copyright (c) Algorealm, Inc.
-use std::fs;
+use std::{collections::VecDeque, fs};
 
 use crate::{prelude::*, util};
 use rocket::serde::json::{
     serde_json::{from_str, json},
     Value,
 };
+
+use async_std::sync::Mutex;
+use std::sync::Arc;
 
 /// check if a database exists
 pub fn database_exists(db_name: &str) -> bool {
@@ -90,12 +93,13 @@ pub fn all_dbs(config: &DbConfig) -> DatabaseResult<Vec<String>> {
 }
 
 /// write to database
-pub fn update_document(
+pub async fn update_document(
     db_name: &str,
     doc_id: &str,
     did: Did,
     config: &DbConfig,
     data_wrapper: DataWrapper<Value>,
+    did_queue: &Arc<Mutex<VecDeque<DbEntry>>>,
 ) -> Result<Value, DatabaseError> {
     // first parse the data wrapper
     let mut db_entry: Value = data_wrapper.data;
@@ -106,6 +110,9 @@ pub fn update_document(
         .flush_every_ms(Some(config.flush_interval));
 
     let db = cfg.open()?;
+
+    // clone did for the queue
+    let did_1 = did.clone();
 
     // metadata ID = doc_id + "_meta"
     let meta_id = format!("{}_meta", doc_id);
@@ -169,6 +176,17 @@ pub fn update_document(
 
                     // save metadata
                     db.insert(meta_id.as_bytes(), doc_meta.to_string().as_bytes())?;
+
+                    // push to db_entry queue for DID validation
+                    let mut guard = did_queue.lock().await;
+                    // check that the did is not already on the queue, before pushing
+                    if guard.iter().any(|e| e.did != did_1) {
+                        guard.push_back(DbEntry {
+                            did: did_1.clone(),
+                            db_name: db_name.to_owned(),
+                            doc_id: doc_id.to_owned(),
+                        });
+                    }
 
                     // return response
                     return Ok(json!({

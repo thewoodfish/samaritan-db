@@ -15,7 +15,7 @@ use rocket::{
 use serde::Serialize;
 use serde_json::Error as SerdeError;
 use sled::Error as SledError;
-use std::io;
+use std::{io, collections::VecDeque};
 
 use crate::util;
 
@@ -50,7 +50,7 @@ impl From<io::Error> for DatabaseError {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct DbConfig {
     pub path: String,
@@ -62,6 +62,8 @@ pub struct DbConfig {
 
 /// path to config file
 pub static CONFIG_FILE_PATH: &str = "config.ini";
+/// time for task to go to sleep during DID validity cleanup
+pub const DID_CLEAUNUP_SLEEP_TIME: u64 = 10;
 
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
 
@@ -145,7 +147,7 @@ impl<'r> FromRequest<'r> for BasicAuth {
 }
 
 // DID type
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone, PartialEq)]
 pub struct Did(pub String);
 
 #[rocket::async_trait]
@@ -185,4 +187,11 @@ pub struct DataWrapper<T> {
 }
 
 /// A type that hold DIDs of data that have just been inserted into the database
-pub type DidQueue = Vec<String>;
+pub type DidQueue = VecDeque<DbEntry>;
+
+/// Struct that represents database entries, used to run DID validity cleanup operations
+pub struct DbEntry {
+    pub did: Did,
+    pub db_name: String,
+    pub doc_id: String
+}

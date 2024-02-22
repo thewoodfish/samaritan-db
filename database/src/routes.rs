@@ -6,6 +6,8 @@ use rocket::Request;
 use rocket::State;
 
 use crate::{contract, db, prelude::*, util};
+use std::sync::Arc;
+use async_std::sync::Mutex;
 
 #[post("/_auth", data = "<auth_payload>")]
 async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
@@ -39,7 +41,11 @@ async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Val
                 // write details to config file
                 if util::write_config("auth", "application_did", &credentials.did.0)
                     && util::write_config("auth", "auth_secret", &secret_password)
-                    && util::write_config("auth", "secret", util::hash_string(&credentials.secret).as_ref())
+                    && util::write_config(
+                        "auth",
+                        "secret",
+                        util::hash_string(&credentials.secret).as_ref(),
+                    )
                 {
                     return Custom(
                         Status::Ok,
@@ -196,20 +202,22 @@ pub fn uuids(count: Option<u32>) -> Value {
 
 /// write data
 #[put("/<db_name>/<doc_id>", data = "<data_wrapper>")]
-pub fn update_document(
+pub async fn update_document(
     db_name: &str,
     doc_id: &str,
     did: Did,
     config: &State<DbConfig>,
     _auth: BasicAuth,
     data_wrapper: Json<DataWrapper<Value>>,
+    did_queue: &State<Arc<Mutex<std::collections::VecDeque<DbEntry>>>>,
 ) -> (Status, Value) {
     // check if database is in existence
     let config = config.inner();
     let data = data_wrapper.into_inner();
+    let did_queue = did_queue.inner();
     if db::database_exists(db_name) {
         // write to it
-        match db::update_document(db_name, doc_id, did, config, data) {
+        match db::update_document(db_name, doc_id, did, config, data, &did_queue).await {
             Ok(json) => (Status::Ok, json),
             Err(e) => match e {
                 DatabaseError::DocumentUpdateConflict => (

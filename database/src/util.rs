@@ -33,15 +33,16 @@ pub fn is_directory_within_parent(child: &str, parent: &str) -> bool {
 }
 
 /// read value from config file
-pub fn read_config(section: &str, key: &str) -> String {
+pub fn read_config(section: &str, key: &str) -> Cow<'static, str> {
     if let Ok(conf) = Ini::load_from_file(CONFIG_FILE_PATH) {
         if let Some(section) = conf.section(Some(section)) {
             if let Some(value) = section.get(key) {
-                return value.into();
+                return Cow::Owned(value.to_owned())
             }
         }
     }
-    Default::default()
+
+    "".into()
 }
 
 /// write value into config file
