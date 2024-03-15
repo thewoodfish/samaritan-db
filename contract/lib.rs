@@ -21,7 +21,7 @@ mod sam_os {
         did_doc_ipfs_addr: IpfsAddress,
     }
 
-    /// Delphi's error type.
+    /// SamaritanOS error type.
     #[derive(scale::Decode, scale::Encode, Clone)]
     #[cfg_attr(
         feature = "std",
