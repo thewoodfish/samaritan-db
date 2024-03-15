@@ -35,7 +35,6 @@ async fn main() -> Result<(), rocket::Error> {
 
     // check for important config and refuse to start the database if the config is not set
     let (contract_address, chain_address, mnemonic) = util::check_start_config();
-    
 
     // TODO!
     // The default values should not be "empty" but should be set to meaningful defaults

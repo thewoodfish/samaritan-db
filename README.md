@@ -52,7 +52,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `function`: It says hi to the database. Generally used to ensure database is running on specified address.
   - `request (example)`:
     ```
-        curl -X PUT http://127.0.0.1:1509/
+        curl -X GET http://127.0.0.1:1509/
     ```
   - `response (example)`:
     ```
