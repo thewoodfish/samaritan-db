@@ -67,7 +67,7 @@ Please note that since this is a RESTful database, most of the request use metho
   - `function`: This is one of the most important routes. It gives control of the database subsequently and exclusively to the application. If configured, it immediately kicks off synchronization with peers and tries to be up to date. It is crucial for the database to respond to onchain state changes.
   - `request (example)`:
     ```
-        curl -X POST http://127.0.0.1:1509/_auth_ -H "Content-Type: application/json" \
+        curl -X POST http://127.0.0.1:1509/_auth -H "Content-Type: application/json" \
         -d '{ "did": "did:sam:apps:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf",
               "secret": "apple banana chair dog elephant forest green happy ice jelly kite"
             }'
