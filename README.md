@@ -182,9 +182,9 @@ Please note that since this is a RESTful database, most of the request use metho
   - `request (example)`:
 
     ```
-       curl -X PUT http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1 \
-        -H "Content-Type: application/json" -H "X-DID: did:sam:root:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf2"
-        -d '{"data": { "name":"Victoria Temilade Adekunle", "role_model":"Martin Luther King", "complexion":"fair", "_rev": "1-d3621aab8cbcec74b10202ac75ca98cb"}}'
+       curl -X PUT 'http://<username>:<password>@127.0.0.1:1509/people/0378f893-e48d-4b69-b821-7a3c2ea7b4b1' \
+      -H "Content-Type: application/json" -H "X-DID: did:sam:root:3e7a1f9c4b8083d2cf63b8b1897d02c9f7bc75b0316bdaf2" \
+      -d '{"data": { "name":"Victoria Temilade Adekunle", "role_model":"Martin Luther King", "complexion":"fair", "_rev": "1-d3621aab8cbcec74b10202ac75ca98cb"}}'
     ```
 
   - `response (example)`:
