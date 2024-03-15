@@ -6,11 +6,14 @@ use rocket::Request;
 use rocket::State;
 
 use crate::{contract, db, prelude::*, util};
-use std::sync::Arc;
 use async_std::sync::Mutex;
+use std::sync::Arc;
 
 #[post("/_auth", data = "<auth_payload>")]
-async fn init_application(auth_payload: Json<AuthPayload>, config: &State<DbConfig>) -> status::Custom<Value> {
+async fn init_application(
+    auth_payload: Json<AuthPayload>,
+    config: &State<DbConfig>,
+) -> status::Custom<Value> {
     let credentials = auth_payload.into_inner();
 
     // check the DID for lexical compliance
@@ -24,66 +27,76 @@ async fn init_application(auth_payload: Json<AuthPayload>, config: &State<DbConf
     } else {
         // check that DID and password is recognized onchain
         if contract::authenticate(&config, &credentials).await {
-            // set the auth details, only if it hasn't been set
-            // read config file
-            let (hash_secret, application_did) = (
-                util::read_config("auth", "secret"),
-                util::read_config("auth", "application_did"),
-            );
+            // check that the SS%* DID suffix matches the onchain authenticated account address
+            if contract::did_exists(&config, &credentials.did).await {
+                // set the auth details, only if it hasn't been set
+                // read config file
+                let (hash_secret, application_did) = (
+                    util::read_config("auth", "secret"),
+                    util::read_config("auth", "application_did"),
+                );
 
-            if hash_secret.is_empty() {
-                // TODO!
-                // spawn task to manage data operations
+                if hash_secret.is_empty() {
+                    // TODO!
+                    // spawn task to manage data operations
 
-                // generate new password
-                let secret_password = util::generate_strong_password(10);
+                    // generate new password
+                    let secret_password = util::generate_strong_password(10);
 
-                // write details to config file
-                if util::write_config("auth", "application_did", &credentials.did.0)
-                    && util::write_config("auth", "auth_secret", &secret_password)
-                    && util::write_config(
-                        "auth",
-                        "secret",
-                        util::hash_string(&credentials.secret).as_ref(),
-                    )
-                {
-                    return Custom(
-                        Status::Ok,
-                        json!({
-                            "ok" : true,
-                            "secret": secret_password
-                        }),
-                    );
+                    // write details to config file
+                    if util::write_config("auth", "application_did", &credentials.did.0)
+                        && util::write_config("auth", "auth_secret", &secret_password)
+                        && util::write_config(
+                            "auth",
+                            "secret",
+                            util::hash_string(&credentials.secret).as_ref(),
+                        )
+                    {
+                        return Custom(
+                            Status::Ok,
+                            json!({
+                                "ok" : true,
+                                "secret": secret_password
+                            }),
+                        );
+                    } else {
+                        return Custom(
+                            Status::InternalServerError,
+                            json!({
+                                "error" : "Could not modify config file"
+                            }),
+                        );
+                    }
                 } else {
+                    // generate new password
+                    let secret_password = util::generate_strong_password(10);
+
+                    // check whether account has been initialized before and we can continue session
+                    if util::hash_string(&credentials.secret) == hash_secret {
+                        // TODO!
+                        // spawn task to manage data operations
+
+                        return Custom(
+                            Status::Ok,
+                            json!({
+                                "ok" : true,
+                                "secret": secret_password
+                            }),
+                        );
+                    }
+
                     return Custom(
-                        Status::InternalServerError,
+                        Status::Unauthorized,
                         json!({
-                            "error" : "Could not modify config file"
+                            "error" : format!("DID `{}` already initialized in database.", application_did)
                         }),
                     );
                 }
             } else {
-                // generate new password
-                let secret_password = util::generate_strong_password(10);
-
-                // check whether account has been initialized before and we can continue session
-                if util::hash_string(&credentials.secret) == hash_secret {
-                    // TODO!
-                    // spawn task to manage data operations
-
-                    return Custom(
-                        Status::Ok,
-                        json!({
-                            "ok" : true,
-                            "secret": secret_password
-                        }),
-                    );
-                }
-
                 return Custom(
-                    Status::Unauthorized,
+                    Status::NotFound,
                     json!({
-                        "error" : format!("DID `{}` already initialized in database.", application_did)
+                        "error" : "provided SS58 DID suffix does not match address of authenticated account onchain."
                     }),
                 );
             }
