@@ -1,17 +1,24 @@
 /// Copyright (c) Algorealm, Inc.
+use crate::{cli, prelude::*};
 
-use crate::prelude::*;
-
-/// query the contract and authenticate the auth payload
-pub fn authenticate(_auth_payload: &AuthPayload) -> bool {
-    // TODO: write code to authenticate the contract
-
-    true
+/// Query the contract and authenticate the auth payload
+pub async fn authenticate(cfg: &DbConfig, auth_payload: &AuthPayload) -> bool {
+    let _ipfs_cid = cli::auth_account(&cfg, &auth_payload.secret).await;
+    if _ipfs_cid.is_empty() {
+        false
+    } else {
+        true
+    }
 }
 
-/// check the contract if a particular DID is registered
-pub fn did_exists(_did: &Did) -> bool {
-    // TODO: write code that checks contract for DID validity
-
-    true
+/// Check the contract if a particular DID is registered.
+pub async fn did_exists(cfg: &DbConfig, did: &Did) -> bool {
+    // we need the SS58 suffix of the DID only
+    if let Some(ss58_address) = did.0.split(":").last() {
+        let _ipfs_cid = cli::did_exists(&cfg, ss58_address).await;
+        if !_ipfs_cid.is_empty() {
+            return true;
+        }
+    }
+    false
 }

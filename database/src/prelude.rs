@@ -15,7 +15,7 @@ use rocket::{
 use serde::Serialize;
 use serde_json::Error as SerdeError;
 use sled::Error as SledError;
-use std::{io, collections::VecDeque};
+use std::{collections::VecDeque, io, time::Duration};
 
 use crate::util;
 
@@ -58,17 +58,26 @@ pub struct DbConfig {
     pub flush_interval: u64,
     pub cache_capacity: u64,
     pub version: String,
+    pub contract_address: String,
+    pub chain_address: String,
+    pub mnemonic: String,
 }
 
 /// path to config file
 pub static CONFIG_FILE_PATH: &str = "config.ini";
 /// time for task to go to sleep during DID validity cleanup
-pub const DID_CLEAUNUP_SLEEP_TIME: u64 = 10;
+pub const DID_CLEANUP_SLEEP_TIME: u64 = 10;
+/// time for the database to sleep before retrying CLI operations
+pub const CLI_RETRY_DURATION: Duration = Duration::from_secs(5);
+/// Maximum number of retries before giving a negative response
+pub const MAX_RETRY_COUNT: u64 = 5;
+/// Directory of the smart contract
+pub static CONTRACT_DIRECTORY: &str = "../../contract";
 
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
 
 impl DbConfig {
-    // The `user` parameter determines which DID we're trying to parse
+    /// The `user` parameter determines which DID we're trying to parse
     pub fn is_valid_did(did: &String, user: bool) -> bool {
         // Expected format: "did:sam:apps:<48 characters hexadecimal string>"
         let parts: Vec<&str> = did.split(':').collect();
@@ -193,5 +202,5 @@ pub type DidQueue = VecDeque<DbEntry>;
 pub struct DbEntry {
     pub did: Did,
     pub db_name: String,
-    pub doc_id: String
+    pub doc_id: String,
 }

@@ -17,3 +17,4 @@ uuid = { version = "1.7.0", features = [ "v4", "fast-rng", "macro-diagnostics" ]
 md5 = "0.7.0"
 rand = "0.8.5"
 async-std = { version = "1.12", features = ["attributes"] }
+hex = "0.4.3"

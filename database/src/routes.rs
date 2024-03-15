@@ -10,7 +10,7 @@ use std::sync::Arc;
 use async_std::sync::Mutex;
 
 #[post("/_auth", data = "<auth_payload>")]
-async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Value> {
+async fn init_application(auth_payload: Json<AuthPayload>, config: &State<DbConfig>) -> status::Custom<Value> {
     let credentials = auth_payload.into_inner();
 
     // check the DID for lexical compliance
@@ -23,7 +23,7 @@ async fn init_application(auth_payload: Json<AuthPayload>) -> status::Custom<Val
         );
     } else {
         // check that DID and password is recognized onchain
-        if contract::authenticate(&credentials) {
+        if contract::authenticate(&config, &credentials).await {
             // set the auth details, only if it hasn't been set
             // read config file
             let (hash_secret, application_did) = (

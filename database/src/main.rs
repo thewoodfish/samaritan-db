@@ -8,6 +8,7 @@ mod db;
 mod prelude;
 mod routes;
 mod util;
+mod cli;
 
 use std::{sync::Arc, time::Duration};
 
@@ -32,6 +33,10 @@ async fn main() -> Result<(), rocket::Error> {
     let version = util::read_config("data", "version");
     let vsn = version.clone();
 
+    // check for important config and refuse to start the database if the config is not set
+    let (contract_address, chain_address, mnemonic) = util::check_start_config();
+    
+
     // TODO!
     // The default values should not be "empty" but should be set to meaningful defaults
 
@@ -42,6 +47,9 @@ async fn main() -> Result<(), rocket::Error> {
         flush_interval,
         cache_capacity,
         version: version.into(),
+        contract_address,
+        chain_address,
+        mnemonic
     };
 
     // Queue containing list of DIDs whose data have just been written to the database
@@ -59,7 +67,7 @@ async fn main() -> Result<(), rocket::Error> {
                 // check the list of DIDs we have recorded and recognized
                 if util::read_config("identifiers", &db_entry.did.0).is_empty() {
                     // check the chain if the DID is recognized
-                    if !contract::did_exists(&db_entry.did) {
+                    if !contract::did_exists(&cfg, &db_entry.did).await {
                         // remove data in association to "fake" DID
                         let _ = db::delete_document(&db_entry.db_name, &db_entry.doc_id, &cfg);
                     } else {
@@ -70,7 +78,7 @@ async fn main() -> Result<(), rocket::Error> {
             }
 
             // sleep for some seconds
-            async_std::task::sleep(Duration::from_secs(DID_CLEAUNUP_SLEEP_TIME)).await;
+            async_std::task::sleep(Duration::from_secs(DID_CLEANUP_SLEEP_TIME)).await;
         }
     });
 
