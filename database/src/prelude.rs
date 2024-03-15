@@ -72,7 +72,7 @@ pub const CLI_RETRY_DURATION: Duration = Duration::from_secs(5);
 /// Maximum number of retries before giving a negative response
 pub const MAX_RETRY_COUNT: u64 = 5;
 /// Directory of the smart contract
-pub static CONTRACT_DIRECTORY: &str = "../../contract";
+pub static CONTRACT_DIRECTORY: &str = "../contract";
 
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
 
