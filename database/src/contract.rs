@@ -15,7 +15,7 @@ pub async fn authenticate(auth_payload: &AuthPayload) -> bool {
 
 /// Check the contract if a particular DID is registered
 pub async fn did_exists(cfg: &DbConfig, did: &Did) -> bool {
-    if let Ok(response) = rpc::did_exists(&did.0, &cfg.mnemonic).await {
+    if let Ok(response) = rpc::did_exists(&did.0.split(":").last().unwrap_or_default(), &cfg.mnemonic).await {
         if response["error"] == Value::Bool(false) {
             return if response["data"]["exists"] == Value::Bool(true) { true } else { false }
         }
