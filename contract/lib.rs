@@ -54,11 +54,15 @@ mod sam_os {
     type AccountType = Vec<u8>;
     /// This type represents an IPFS address (CID)
     type IpfsAddress = Vec<u8>;
+    /// This type represents a simple SS58 address
+    type SS58Address = Vec<u8>;
 
     /// The SamaritanOS contract storage
     #[ink(storage)]
     pub struct SamOs {
         accounts: Mapping<AccountId, AccountInfo>,
+        /// This helps keep track of addresses (DIDs) registered onchain
+        addresses: Vec<SS58Address>
     }
 
     impl SamOs {
@@ -67,12 +71,13 @@ mod sam_os {
         pub fn new() -> Self {
             Self {
                 accounts: Default::default(),
+                addresses: Default::default()
             }
         }
 
         /// Create a new account on the network
         #[ink(message, payable)]
-        pub fn new_account(&mut self, r#type: bool, did_doc_ipfs_addr: IpfsAddress) -> Result<()> {
+        pub fn new_account(&mut self, r#type: bool, did_doc_ipfs_addr: IpfsAddress, ss58_address: SS58Address) -> Result<()> {
             // Get the contract caller
             let caller = Self::env().caller();
 
@@ -89,6 +94,11 @@ mod sam_os {
                         did_doc_ipfs_addr,
                     },
                 );
+
+                // add the AccountId address to the list of registered addresses
+                if !self.addresses.contains(&ss58_address) {
+                    self.addresses.push(ss58_address);
+                }
 
                 // Emit event
                 self.env().emit_event(AccountCreated { account_id: caller });
@@ -137,19 +147,23 @@ mod sam_os {
 
         /// Verify if a DID exists in contract storage
         #[ink(message, payable)]
-        pub fn did_exists(&mut self, bytes: Vec<u8>) -> Vec<u8> {
-            // try to convert a Vec<u8> into an AccountId
-            if let Ok(address) = AccountId::try_from(&bytes[..]) {
-                // try to read from strorage
-                if let Some(account_info) = self.accounts.get(&address) {
-                    let mut return_bytes = account_info.did_doc_ipfs_addr;
-                    return_bytes.push(b'#');
-                    return_bytes.extend(account_info.r#type);
-                    return return_bytes;
-                }
-            }
+        pub fn did_exists(&mut self, ss58_address: Vec<u8>) -> bool {
+            self.addresses.contains(&ss58_address)
+        }
+    }
 
-            Default::default()
+    #[cfg(test)]
+    mod tests {
+        use ink::primitives::AccountId;
+
+        /// We test the conversion from Vec to AccountId
+        #[ink::test]
+        fn conversion_works() {
+            let bytes = [
+                60, 8, 47, 20, 94, 217, 221, 147, 127, 180, 125, 52, 116, 205, 19, 137, 107, 197,
+                2, 9, 2, 48, 220, 72, 106, 119, 238, 72, 55, 229, 231, 116,
+            ];
+            assert!(AccountId::try_from(&bytes[..]).is_ok());
         }
     }
 }

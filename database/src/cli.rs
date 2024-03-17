@@ -24,6 +24,7 @@ pub async fn auth_account(cfg: &DbConfig, mnemonic: &str) -> String {
             .output()
         {
             Ok(output) => {
+                println!("{:#?}", output);
                 let binding: std::borrow::Cow<'_, str> = String::from_utf8_lossy(&output.stdout);
                 return util::parse_contract_return_data(&binding);
             }
@@ -71,6 +72,7 @@ pub async fn did_exists(cfg: &DbConfig, did: &str) -> String {
         {
             Ok(output) => {
                 let binding: std::borrow::Cow<'_, str> = String::from_utf8_lossy(&output.stdout);
+                println!("{:#?}", binding);
                 return util::parse_contract_return_data(&binding);
             }
             Err(_) => {
