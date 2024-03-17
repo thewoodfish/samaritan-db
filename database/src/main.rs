@@ -34,7 +34,7 @@ async fn main() -> Result<(), rocket::Error> {
     let vsn = version.clone();
 
     // check for important config and refuse to start the database if the config is not set
-    let (contract_address, chain_address, mnemonic) = util::check_start_config();
+    let mnemonic = util::check_start_config();
 
     // TODO!
     // The default values should not be "empty" but should be set to meaningful defaults
@@ -46,8 +46,6 @@ async fn main() -> Result<(), rocket::Error> {
         flush_interval,
         cache_capacity,
         version: version.into(),
-        contract_address,
-        chain_address,
         mnemonic
     };
 

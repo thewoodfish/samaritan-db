@@ -132,17 +132,14 @@ pub fn generate_strong_password(length: usize) -> String {
 }
 
 // check for important config and refuse to start the database if they are not set\
-pub fn check_start_config() -> (String, String, String) {
+pub fn check_start_config() -> String {
     // read in blockchain config
-    let contract_addr = read_config("contract", "address");
-    let chain_addr = read_config("contract", "chain_address");
     let mnemonic = read_config("contract", "mnemonic");
-
-    if contract_addr.is_empty() || chain_addr.is_empty() || mnemonic.is_empty() {
+    if mnemonic.is_empty() {
         // kill process
-        println!("Please check the config.ini file and input all the required blockchain configurations parameters.");
+        println!("Please check the config.ini file and input a mnemonic for your funded application account.");
         process::exit(2);
     }
 
-    (contract_addr.to_string(), chain_addr.to_string(), mnemonic.to_string())
+    mnemonic.to_string()
 }

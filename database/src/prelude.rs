@@ -58,8 +58,6 @@ pub struct DbConfig {
     pub flush_interval: u64,
     pub cache_capacity: u64,
     pub version: String,
-    pub contract_address: String,
-    pub chain_address: String,
     pub mnemonic: String,
 }
 
