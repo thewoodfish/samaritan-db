@@ -131,35 +131,6 @@ pub fn generate_strong_password(length: usize) -> String {
     strong_password
 }
 
-// accepts a string and returns its hexadecimal format
-pub fn str_to_hex(data: &str) -> String {
-    format!("{}{}", "0x", hex::encode(data))
-}
-
-// parses contract return data and returns it as a human readable string
-pub fn parse_contract_return_data(binding: &str) -> String {
-    let output = binding.split("elems: ").skip(1).next().unwrap_or_default();
-    let mut collator: Vec<u8> = Vec::new();
-    // lets get all the numbers out
-    let parsed = output
-        .as_bytes()
-        .to_vec()
-        .iter()
-        .filter(|&&e| e == b',' || e.is_ascii_digit())
-        .map(|e| e.clone())
-        .collect::<Vec<u8>>();
-
-    let _ = String::from_utf8(parsed)
-        .unwrap_or_default()
-        .split(',')
-        .map(|e| {
-            collator.push(e.parse::<u8>().unwrap_or_default());
-        })
-        .collect::<()>();
-
-    String::from_utf8(collator).unwrap_or_default()
-}
-
 // check for important config and refuse to start the database if they are not set\
 pub fn check_start_config() -> (String, String, String) {
     // read in blockchain config

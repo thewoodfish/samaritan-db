@@ -26,7 +26,7 @@ async fn init_application(
         );
     } else {
         // check that DID and password is recognized onchain
-        if contract::authenticate(&config, &credentials).await {
+        if contract::authenticate(&credentials).await {
             // check that the SS58 DID suffix matches the onchain authenticated account address
             if contract::did_exists(&config, &credentials.did).await {
                 // set the auth details, only if it hasn't been set

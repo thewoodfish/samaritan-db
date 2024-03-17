@@ -15,7 +15,7 @@ use rocket::{
 use serde::Serialize;
 use serde_json::Error as SerdeError;
 use sled::Error as SledError;
-use std::{collections::VecDeque, io, time::Duration};
+use std::{collections::VecDeque, io};
 
 use crate::util;
 
@@ -67,14 +67,10 @@ pub struct DbConfig {
 pub static CONFIG_FILE_PATH: &str = "config.ini";
 /// time for task to go to sleep during DID validity cleanup
 pub const DID_CLEANUP_SLEEP_TIME: u64 = 10;
-/// time for the database to sleep before retrying CLI operations
-pub const CLI_RETRY_DURATION: Duration = Duration::from_secs(5);
-/// Maximum number of retries before giving a negative response
-pub const MAX_RETRY_COUNT: u64 = 5;
-/// Directory of the smart contract
-pub static CONTRACT_DIRECTORY: &str = "../contract";
-
+/// The database error type
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
+/// The rust generic error type
+pub type GenericError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 impl DbConfig {
     /// The `user` parameter determines which DID we're trying to parse

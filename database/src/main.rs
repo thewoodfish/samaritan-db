@@ -8,7 +8,7 @@ mod db;
 mod prelude;
 mod routes;
 mod util;
-mod cli;
+mod rpc;
 
 use std::{sync::Arc, time::Duration};
 
