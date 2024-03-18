@@ -180,12 +180,14 @@ pub async fn update_document(
                     // push to db_entry queue for DID validation
                     let mut guard = did_queue.lock().await;
                     // check that the did is not already on the queue, before pushing
-                    if guard.iter().any(|e| e.did != did_1) {
+                    if guard.iter().all(|e| e.did != did_1) {
                         guard.push_back(DbEntry {
                             did: did_1.clone(),
                             db_name: db_name.to_owned(),
                             doc_id: doc_id.to_owned(),
                         });
+
+                        println!("--- {:#?}", guard);
                     }
 
                     // return response
@@ -233,6 +235,17 @@ pub async fn update_document(
 
             // save in same database
             db.insert(meta_id.as_bytes(), metadata.to_string().as_bytes())?;
+
+            // push to db_entry queue for DID validation
+            let mut guard = did_queue.lock().await;
+            // check that the did is not already on the queue, before pushing
+            if guard.iter().any(|e| e.did != did_1) {
+                guard.push_back(DbEntry {
+                    did: did_1.clone(),
+                    db_name: db_name.to_owned(),
+                    doc_id: doc_id.to_owned(),
+                });
+            }
 
             // return response
             return Ok(json!({

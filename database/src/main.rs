@@ -19,7 +19,7 @@ use rocket::{fairing::AdHoc, http::Header};
 /// Rocket serves as the main entry point to the database.
 /// It accepts the HTTP requests and then passes it into other components of the DB
 /// Other components are independent of rocket and gets fired up when the database is run e.g networking
-#[rocket::main]
+#[tokio::main]
 async fn main() -> Result<(), rocket::Error> {
     // read config into state
     let path = util::read_config("data", "path");
@@ -56,10 +56,12 @@ async fn main() -> Result<(), rocket::Error> {
     // and taking the necessary actions
     let cfg = config.clone();
     let did_queue = did_list.clone();
-    async_std::task::spawn(async move {
+    tokio::task::spawn(async move {
         loop {
             // check queue
             let mut guard = did_queue.lock().await;
+            println!("{:#?}", guard);
+
             if let Some(db_entry) = guard.pop_front() {
                 // check the list of DIDs we have recorded and recognized
                 if util::read_config("identifiers", &db_entry.did.0).is_empty() {

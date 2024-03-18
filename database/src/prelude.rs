@@ -75,13 +75,13 @@ impl DbConfig {
     pub fn is_valid_did(did: &String, user: bool) -> bool {
         // Expected format: "did:sam:apps:<48 characters hexadecimal string>"
         let parts: Vec<&str> = did.split(':').collect();
-
+    
         if parts.len() == 4
             && parts[0] == "did"
             && parts[1] == "sam"
-            && parts[2] == if user { "root" } else { "apps" }
+            && (parts[2] == "root") == user
             && parts[3].len() == 48
-            && parts[3].chars().all(|c| c.is_ascii_hexdigit())
+            && parts[3].chars().all(|c| c.is_alphanumeric())
         {
             true
         } else {
@@ -150,7 +150,7 @@ impl<'r> FromRequest<'r> for BasicAuth {
 }
 
 // DID type
-#[derive(serde::Deserialize, Clone, PartialEq)]
+#[derive(serde::Deserialize, Clone, PartialEq, Debug)]
 pub struct Did(pub String);
 
 #[rocket::async_trait]
@@ -164,6 +164,7 @@ impl<'r> FromRequest<'r> for Did {
         if DbConfig::is_valid_did(&did, true) {
             return Outcome::Success(Did(did));
         } else {
+            println!("----> {}", DbConfig::is_valid_did(&did, true));
             return Outcome::Error((
                 Status::BadRequest,
                 json!({
@@ -193,6 +194,7 @@ pub struct DataWrapper<T> {
 pub type DidQueue = VecDeque<DbEntry>;
 
 /// Struct that represents database entries, used to run DID validity cleanup operations
+#[derive(Debug)]
 pub struct DbEntry {
     pub did: Did,
     pub db_name: String,
