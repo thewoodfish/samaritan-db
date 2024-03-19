@@ -2,6 +2,8 @@
 use crate::prelude::*;
 use rocket::serde::json::Value;
 
+/// TODO! The address is hardcoded for now. It should be configurable
+
 /// Send an RPC to the contract to verify the validity of an account
 pub async fn auth_account(mnemonic: &str) -> Result<Value, GenericError> {
     let url = format!(
